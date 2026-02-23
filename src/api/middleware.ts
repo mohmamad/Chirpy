@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { APIConfig } from "../config.js";
 
 export function middlewareLogResponses(
   req: Request,
@@ -12,6 +13,19 @@ export function middlewareLogResponses(
       );
     }
   });
+
+  next();
+}
+
+export function middlewareMetricsInc(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  if (!req.url.includes("reset") && !req.url.includes("metrics"))
+    res.on("finish", () => {
+      APIConfig.fileserverHits += 1;
+    });
 
   next();
 }
