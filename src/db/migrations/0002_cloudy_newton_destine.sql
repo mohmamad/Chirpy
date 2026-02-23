@@ -1,0 +1,1 @@
+ALTER TABLE "chirps" ADD COLUMN "body" varchar(140) NOT NULL;

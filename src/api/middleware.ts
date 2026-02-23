@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { APIConfig } from "../config.js";
+import { config } from "../config.js";
 import { respondWithError } from "./json.js";
 import {
   BadRequestError,
@@ -31,7 +31,7 @@ export function middlewareMetricsInc(
 ) {
   if (!req.url.includes("reset") && !req.url.includes("metrics"))
     res.on("finish", () => {
-      APIConfig.fileserverHits += 1;
+      config.api.fileServerHits += 1;
     });
 
   next();
