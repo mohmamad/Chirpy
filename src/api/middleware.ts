@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { APIConfig } from "../config.js";
+import { respondWithError } from "./json.js";
 
 export function middlewareLogResponses(
   req: Request,
@@ -28,4 +29,14 @@ export function middlewareMetricsInc(
     });
 
   next();
+}
+
+export function middlewareErrorHandler(
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  console.log(err.stack);
+  respondWithError(res, 500, "Something went wrong on our end");
 }

@@ -1,26 +1,32 @@
 import { Request, Response } from "express";
+import { respondWithError, respondWithJSON } from "./json.js";
 
-export function handlerValidateChirp(req: Request, res: Response) {
-  type responseData = {
-    error: string;
-    valid: boolean;
-  };
+export async function handlerValidateChirp(req: Request, res: Response) {
   type chirpRequest = {
     body: string;
   };
   const chirp = req.body as chirpRequest;
-  const response: responseData = {
-    error: "",
-    valid: false,
-  };
 
   if (typeof chirp.body !== "string") {
-    response.error = "Something went wrong";
-    return res.status(400).type("text/plain; charset=utf-8").send(response);
+    respondWithError(res, 400, "Request body must be a string");
+    return;
   } else if (chirp.body.length > 140) {
-    response.error = "Chirp is too long";
-    return res.status(400).type("text/plain; charset=utf-8").send(response);
+    throw new Error("Function not implemented.");
+    respondWithError(res, 400, "Chirp is too long");
+    return;
   }
-  response.valid = true;
-  return res.status(200).type("text/plain; charset=utf-8").send(response);
+  const forbiddenWords = ["kerfuffle", "sharbert", "fornax"];
+  let Chirps = chirp.body.split(" ");
+
+  for (const word of forbiddenWords) {
+    Chirps = Chirps.map((chirpWord) => {
+      if (chirpWord.toLowerCase() === word.toLowerCase()) {
+        return "****";
+      }
+      return chirpWord;
+    });
+  }
+  const cleanedBody = Chirps.join(" ");
+
+  respondWithJSON(res, 200, { cleanedBody: cleanedBody });
 }
