@@ -1,12 +1,15 @@
 import { Request, Response } from "express";
 import { createUser } from "../db/queries/users.js";
 import { respondWithError, respondWithJSON } from "./json.js";
-import { checkPasswordHash, hashPassword } from "./auth.js";
+import { checkPasswordHash, hashPassword } from "../auth.js";
 import { getUserByEmail } from "../db/queries/users.js";
+import { makeJWT } from "../auth.js";
+import { config } from "../config.js";
 
 type UserRequest = {
   email: string;
   password: string;
+  expiresInSeconds?: number;
 };
 export async function handlerAddUser(req: Request, res: Response) {
   const userReq = req.body as UserRequest;
@@ -43,13 +46,18 @@ export async function handlerLogin(req: Request, res: Response) {
     userReq.password,
     user.password,
   );
-
+  const token = makeJWT(
+    user.id,
+    userReq.expiresInSeconds || config.JWTConfig.defaultDuration,
+    config.JWTConfig.secret,
+  );
   if (isPasswordCorrect) {
     respondWithJSON(res, 200, {
       id: user.id,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       email: user.email,
+      token: token,
     });
   } else {
     respondWithError(res, 401, "Incorrect email or password");

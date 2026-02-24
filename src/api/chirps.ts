@@ -4,11 +4,20 @@ import { UUID } from "node:crypto";
 import { createChirp } from "../db/queries/chirps.js";
 import { getChirps } from "../db/queries/chirps.js";
 import { getChirpById } from "../db/queries/chirps.js";
+import { getBearerToken, validateJWT } from "../auth.js";
+import { config } from "../config.js";
 
 export async function handlerAddChirps(req: Request, res: Response) {
+  let userId = "";
+  try {
+    const token = getBearerToken(req);
+    userId = validateJWT(token, config.JWTConfig.secret);
+  } catch {
+    respondWithError(res, 401, "Unauthorized");
+  }
+
   type chirpRequest = {
     body: string;
-    userId: UUID;
   };
   const chirpReq = req.body as chirpRequest;
   if (!isValidChirp(chirpReq.body)) {
@@ -16,7 +25,7 @@ export async function handlerAddChirps(req: Request, res: Response) {
     return;
   }
   const cleanedBody = validateChirp(chirpReq.body);
-  const chirp = await createChirp(chirpReq.userId as UUID, cleanedBody);
+  const chirp = await createChirp(userId as UUID, cleanedBody);
   respondWithJSON(res, 201, chirp);
 }
 

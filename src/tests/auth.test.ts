@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import {
-  makeJWT,
-  validateJWT,
-  hashPassword,
-  checkPasswordHash,
-} from "../api/auth";
+import { makeJWT, validateJWT, hashPassword, checkPasswordHash } from "../auth";
+import { getBearerToken } from "../auth";
+import type { Request } from "express";
 
 describe("Password Hashing", () => {
   const password1 = "correctPassword123!";
@@ -48,5 +45,39 @@ describe("JWT", () => {
     const token = makeJWT(userID, 60, secret);
 
     expect(() => validateJWT(token, wrongSecret)).toThrow();
+  });
+});
+
+describe("getBearerToken", () => {
+  it("should extract the token from a valid Authorization header", () => {
+    const req = {
+      headers: {
+        authorization: "Bearer abc123token",
+      },
+    } as Request;
+
+    const token = getBearerToken(req);
+
+    expect(token).toBe("abc123token");
+  });
+
+  it("should throw an error if Authorization header is missing", () => {
+    const req = {
+      headers: {},
+    } as Request;
+
+    expect(() => getBearerToken(req)).toThrow("No token found");
+  });
+
+  it("should return undefined token if header is malformed", () => {
+    const req = {
+      headers: {
+        authorization: "Bearer",
+      },
+    } as Request;
+
+    const token = getBearerToken(req);
+
+    expect(token).toBeUndefined();
   });
 });

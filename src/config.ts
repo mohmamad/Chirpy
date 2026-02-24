@@ -4,7 +4,7 @@ type Config = {
   api: APIConfig;
   db: DBConfig;
   platform: string;
-  secret: string;
+  JWTConfig: JWTConfig;
 };
 
 type APIConfig = {
@@ -15,6 +15,11 @@ type APIConfig = {
 type DBConfig = {
   url: string;
   migrationConfig: MigrationConfig;
+};
+type JWTConfig = {
+  defaultDuration: number;
+  secret: string;
+  issuer: string;
 };
 
 process.loadEnvFile();
@@ -41,5 +46,9 @@ export const config: Config = {
     migrationConfig: migrationConfig,
   },
   platform: envOrThrow("PLATFORM"),
-  secret: envOrThrow("SECRET"),
+  JWTConfig: {
+    defaultDuration: 60 * 60,
+    secret: envOrThrow("JWT_SECRET"),
+    issuer: "chirpy",
+  },
 };
