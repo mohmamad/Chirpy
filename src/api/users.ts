@@ -1,20 +1,58 @@
 import { Request, Response } from "express";
 import { createUser } from "../db/queries/users.js";
 import { respondWithError, respondWithJSON } from "./json.js";
+import { checkPasswordHash, hashPassword } from "./auth.js";
+import { getUserByEmail } from "../db/queries/users.js";
 
+type UserRequest = {
+  email: string;
+  password: string;
+};
 export async function handlerAddUser(req: Request, res: Response) {
-  type creatUserRequest = {
-    email: string;
-  };
-  const userReq = req.body as creatUserRequest;
+  const userReq = req.body as UserRequest;
   if (userReq.email.length > 256 || userReq.email.length < 1) {
     respondWithError(res, 400, "Email must be between 1 and 256 characters");
     return;
   }
-  const user = await createUser(userReq.email);
+  const hashedPassword = await hashPassword(userReq.password);
+  const user = await createUser(userReq.email, hashedPassword);
   if (!user) {
     respondWithError(res, 400, "User already exists");
     return;
   }
-  respondWithJSON(res, 201, user);
+  respondWithJSON(res, 201, {
+    id: user.id,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    email: user.email,
+  });
+}
+
+export async function handlerLogin(req: Request, res: Response) {
+  const userReq = req.body as UserRequest;
+  if (userReq.email.length > 256 || userReq.email.length < 1) {
+    respondWithError(res, 400, "Email must be between 1 and 256 characters");
+    return;
+  }
+  const user = await getUserByEmail(userReq.email);
+  if (!user) {
+    respondWithError(res, 404, "User not found");
+    return;
+  }
+  const isPasswordCorrect = await checkPasswordHash(
+    userReq.password,
+    user.password,
+  );
+
+  if (isPasswordCorrect) {
+    respondWithJSON(res, 200, {
+      id: user.id,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      email: user.email,
+    });
+  } else {
+    respondWithError(res, 401, "Incorrect email or password");
+    return;
+  }
 }

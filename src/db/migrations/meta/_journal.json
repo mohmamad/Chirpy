@@ -29,6 +29,13 @@
       "when": 1771886349590,
       "tag": "0003_cynical_jackal",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1771903745011,
+      "tag": "0004_majestic_sugar_man",
+      "breakpoints": true
     }
   ]
 }

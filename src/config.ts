@@ -4,6 +4,7 @@ type Config = {
   api: APIConfig;
   db: DBConfig;
   platform: string;
+  secret: string;
 };
 
 type APIConfig = {
@@ -40,4 +41,5 @@ export const config: Config = {
     migrationConfig: migrationConfig,
   },
   platform: envOrThrow("PLATFORM"),
+  secret: envOrThrow("SECRET"),
 };
