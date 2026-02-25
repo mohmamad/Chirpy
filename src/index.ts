@@ -16,8 +16,10 @@ import {
   handlerGetChirps,
   handlerGetChirpById,
   handlerAddChirps,
+  handlerDeleteChirp,
 } from "./api/chirps.js";
 import { handlerLogin, handlerRefresh, handlerRevoke } from "./api/auth.js";
+import { handlerWebhook } from "./api/webhook.js";
 
 import { config } from "./config.js";
 
@@ -70,6 +72,14 @@ app.post("/api/revoke", (req, res, next) => {
 
 app.put("/api/users", (req, res, next) => {
   Promise.resolve(handlerUpdateUser(req, res)).catch(next);
+});
+
+app.delete("/api/chirps/:chirpId", (req, res, next) => {
+  Promise.resolve(handlerDeleteChirp(req, res)).catch(next);
+});
+
+app.post("/api/polka/webhooks", (req, res, next) => {
+  Promise.resolve(handlerWebhook(req, res)).catch(next);
 });
 
 app.use(middlewareErrorHandler);

@@ -1,9 +1,12 @@
 import { Request, Response } from "express";
 import { respondWithError, respondWithJSON } from "./json.js";
 import { UUID } from "node:crypto";
-import { createChirp } from "../db/queries/chirps.js";
-import { getChirps } from "../db/queries/chirps.js";
-import { getChirpById } from "../db/queries/chirps.js";
+import {
+  getChirpById,
+  deleteChirpById,
+  getChirps,
+  createChirp,
+} from "../db/queries/chirps.js";
 import { getBearerToken, validateJWT } from "../auth.js";
 import { config } from "../config.js";
 
@@ -36,7 +39,7 @@ export async function handlerGetChirps(req: Request, res: Response) {
 }
 
 export async function handlerGetChirpById(req: Request, res: Response) {
-  const chirpId: UUID = req.params.chirpId as UUID;
+  const chirpId = req.params.chirpId as UUID;
 
   const chirp = await getChirpById(chirpId);
   if (!chirp) {
@@ -44,6 +47,30 @@ export async function handlerGetChirpById(req: Request, res: Response) {
     return;
   }
   respondWithJSON(res, 200, chirp);
+}
+
+export async function handlerDeleteChirp(req: Request, res: Response) {
+  const chirpId: UUID = req.params.chirpId as UUID;
+  let userId = "";
+  try {
+    const token = getBearerToken(req);
+    userId = validateJWT(token, config.JWTConfig.secret);
+  } catch {
+    respondWithError(res, 401, "Unauthorized");
+    return;
+  }
+  const chirp = await getChirpById(chirpId);
+  if (!chirp) {
+    respondWithError(res, 404, "Chirp not found");
+    return;
+  }
+  if (chirp.userId !== userId) {
+    respondWithError(res, 403, "Forbidden");
+    return;
+  }
+
+  await deleteChirpById(chirpId);
+  respondWithJSON(res, 204, "");
 }
 
 export function validateChirp(chirp: string) {

@@ -26,6 +26,7 @@ export async function handlerAddUser(req: Request, res: Response) {
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
     email: user.email,
+    isChirpyRed: user.isChirpyRed,
   });
 }
 
@@ -54,5 +55,6 @@ export async function handlerUpdateUser(req: Request, res: Response) {
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
     email: user.email,
+    isChirpyRed: user.isChirpyRed,
   });
 }
