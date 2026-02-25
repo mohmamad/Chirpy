@@ -6,6 +6,7 @@ import {
   deleteChirpById,
   getChirps,
   createChirp,
+  getChirpsByAuthorId,
 } from "../db/queries/chirps.js";
 import { getBearerToken, validateJWT } from "../auth.js";
 import { config } from "../config.js";
@@ -34,7 +35,22 @@ export async function handlerAddChirps(req: Request, res: Response) {
 }
 
 export async function handlerGetChirps(req: Request, res: Response) {
-  const chirps = await getChirps();
+  const sort = (req.query.sort as string | undefined) ?? "asc";
+  const authorId = req.query.authorId as string | undefined;
+
+  let chirps;
+
+  if (authorId) {
+    chirps = await getChirpsByAuthorId(authorId);
+  } else {
+    chirps = await getChirps();
+  }
+  chirps.sort((a, b) => {
+    const timeA = a.createdAt.getTime();
+    const timeB = b.createdAt.getTime();
+    return sort === "desc" ? timeB - timeA : timeA - timeB;
+  });
+
   respondWithJSON(res, 200, chirps);
 }
 

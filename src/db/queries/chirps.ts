@@ -25,3 +25,12 @@ export async function getChirpById(id: string) {
 export async function deleteChirpById(id: string) {
   await db.delete(chirps).where(eq(chirps.id, id));
 }
+
+export async function getChirpsByAuthorId(authorId: string) {
+  const result = await db
+    .select()
+    .from(chirps)
+    .where(eq(chirps.userId, authorId));
+
+  return result;
+}
