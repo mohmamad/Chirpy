@@ -1,15 +1,13 @@
 import { Request, Response } from "express";
-import { createUser } from "../db/queries/users.js";
+import { createUser, updateUser } from "../db/queries/users.js";
 import { respondWithError, respondWithJSON } from "./json.js";
-import { checkPasswordHash, hashPassword } from "../auth.js";
-import { getUserByEmail } from "../db/queries/users.js";
-import { makeJWT } from "../auth.js";
+import { hashPassword } from "../auth.js";
+import { getBearerToken, validateJWT } from "../auth.js";
 import { config } from "../config.js";
 
 type UserRequest = {
   email: string;
   password: string;
-  expiresInSeconds?: number;
 };
 export async function handlerAddUser(req: Request, res: Response) {
   const userReq = req.body as UserRequest;
@@ -31,36 +29,30 @@ export async function handlerAddUser(req: Request, res: Response) {
   });
 }
 
-export async function handlerLogin(req: Request, res: Response) {
+export async function handlerUpdateUser(req: Request, res: Response) {
   const userReq = req.body as UserRequest;
   if (userReq.email.length > 256 || userReq.email.length < 1) {
     respondWithError(res, 400, "Email must be between 1 and 256 characters");
     return;
   }
-  const user = await getUserByEmail(userReq.email);
+  let userId = "";
+  try {
+    const token = getBearerToken(req);
+    userId = validateJWT(token, config.JWTConfig.secret);
+  } catch {
+    respondWithError(res, 401, "Unauthorized");
+    return;
+  }
+  const hashedPassword = await hashPassword(userReq.password);
+  const user = await updateUser(userId, userReq.email, hashedPassword);
   if (!user) {
-    respondWithError(res, 404, "User not found");
+    respondWithError(res, 400, "user not found");
     return;
   }
-  const isPasswordCorrect = await checkPasswordHash(
-    userReq.password,
-    user.password,
-  );
-  const token = makeJWT(
-    user.id,
-    userReq.expiresInSeconds || config.JWTConfig.defaultDuration,
-    config.JWTConfig.secret,
-  );
-  if (isPasswordCorrect) {
-    respondWithJSON(res, 200, {
-      id: user.id,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      email: user.email,
-      token: token,
-    });
-  } else {
-    respondWithError(res, 401, "Incorrect email or password");
-    return;
-  }
+  respondWithJSON(res, 200, {
+    id: user.id,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    email: user.email,
+  });
 }

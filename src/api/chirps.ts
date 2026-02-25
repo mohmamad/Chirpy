@@ -14,6 +14,7 @@ export async function handlerAddChirps(req: Request, res: Response) {
     userId = validateJWT(token, config.JWTConfig.secret);
   } catch {
     respondWithError(res, 401, "Unauthorized");
+    return;
   }
 
   type chirpRequest = {

@@ -3,7 +3,8 @@ import jwt from "jsonwebtoken";
 import { JwtPayload } from "jsonwebtoken";
 import { Request } from "express";
 import { UnauthorizedError, BadRequestError } from "./api/errors.js";
-import { config } from "src/config.js";
+import { config } from "./config.js";
+import crypto from "crypto";
 
 const TOKEN_ISSUER = config.JWTConfig.issuer;
 export async function hashPassword(password: string): Promise<string> {
@@ -69,4 +70,8 @@ export function extractBearerToken(header: string) {
     throw new BadRequestError("Malformed authorization header");
   }
   return splitAuth[1];
+}
+
+export function makeRefreshToken() {
+  return crypto.randomBytes(32).toString("hex").toString();
 }

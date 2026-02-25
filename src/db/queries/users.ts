@@ -23,3 +23,17 @@ export async function getUserByEmail(email: string) {
     .limit(1);
   return user;
 }
+
+export async function updateUser(
+  userId: string,
+  email: string,
+  password: string,
+) {
+  const [result] = await db
+    .update(users)
+    .set({ email: email, password: password })
+    .where(eq(users.id, userId))
+    .returning();
+
+  return result;
+}
